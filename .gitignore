@@ -1,0 +1,10 @@
+# Eval workspaces, field-test records, and preserved skill versions.
+# They hold nested fixture repositories and are not versioned.
+.skillwright/
+
+/.sandpiper/
+
+.DS_Store
+__pycache__/
+*.pyc
+.watchman-cookie-*

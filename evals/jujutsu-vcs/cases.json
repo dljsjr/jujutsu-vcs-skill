@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "skill_name": "jujutsu-vcs",
+  "cases": [
+    {
+      "id": "squash-described",
+      "prompt": "In the jj repository `app` in your working directory, fold the commit \"fixup: handle timeouts in the retry loop\" into its parent, \"Add retry logic to fetch()\". Keep the parent's commit message exactly as it is.",
+      "files": [],
+      "expected_output": "One commit after main, described exactly \"Add retry logic to fetch()\", whose src/client.py has both the retry loop and the timeout handling. No fixup commit remains. The run finishes without getting stuck in an editor.",
+      "assertions": [
+        {
+          "id": "folded",
+          "text": "Exactly one non-empty commit follows main, its src/client.py matches the fixup commit's version (retry plus timeout handling), and no commit whose subject starts with \"fixup:\" is visible.",
+          "check": "python3 -I checks/jjcheck.py check squash-described folded {run_dir}"
+        },
+        {
+          "id": "message-kept",
+          "text": "That commit's description is exactly \"Add retry logic to fetch()\", with no text from the fixup's message appended.",
+          "check": "python3 -I checks/jjcheck.py check squash-described message-kept {run_dir}"
+        },
+        {
+          "id": "finished",
+          "text": "The run finished within its time limit: record.json in the run directory has status \"completed\". A status of \"timeout\" fails, whatever the repository looks like."
+        },
+        {
+          "id": "no-git",
+          "text": "No git command operates on the jj repository in work/app: nothing run from inside work/app, and nothing pointed at it with `-C` or `--git-dir`, invokes git. This includes read-only commands such as `git status` or `git --version`, and git run through `jj util exec` or a script. `jj git ...` subcommands do not count, and neither do tools such as `gh`. git commands on a plain Git repository, such as the bare remote work/origin.git (for example `git --git-dir=../origin.git log`), are allowed."
+        }
+      ]
+    },
+    {
+      "id": "try-and-undo",
+      "prompt": "In the jj repository `app` in your working directory, try rebasing my `feature` bookmark (its three commits) onto `main`, then run the tests with `python3 -m unittest discover -s tests`. If any test fails, put everything back the way it was before you started: `feature` and its three commits on their original parent, `main` unchanged, and the working copy where it was. Then tell me which test failed and why.",
+      "files": [],
+      "expected_output": "The rebase is tried and the tests run; test_headline fails because main renamed slugify(). The repository ends as it started: feature's three commits on their original parent, main unchanged, @ an empty change on top of feature, and no backup bookmarks or copies left behind or made along the way.",
+      "assertions": [
+        {
+          "id": "rebase-happened",
+          "text": "The run actually rebased feature onto main: the operation log contains a rebase operation.",
+          "check": "python3 -I checks/jjcheck.py check try-and-undo rebase-happened {run_dir}"
+        },
+        {
+          "id": "restored",
+          "text": "main is unchanged; feature's three commits have their original change IDs, contents, and parent; and the only local bookmarks are main and feature. New commit IDs are fine.",
+          "check": "python3 -I checks/jjcheck.py check try-and-undo restored {run_dir}"
+        },
+        {
+          "id": "working-copy",
+          "text": "@ is an empty change whose parent is feature. Python cache files (__pycache__, .pyc) are ignored.",
+          "check": "python3 -I checks/jjcheck.py check try-and-undo working-copy {run_dir}"
+        },
+        {
+          "id": "no-backups",
+          "text": "The run protected the original state only through jj itself, such as noting an operation ID, `jj undo`, `jj op restore`, or rebasing back. It fails if the trace shows any backup made to preserve the original state: a bookmark or tag created for that purpose, a copied or cloned repository or directory (for example `cp -r`, `rsync`, `tar`, `git clone`, `jj git clone`, `jj workspace add`), duplicated commits (`jj duplicate`), or saved patch files. Recording IDs or hashes for later comparison is not a backup."
+        },
+        {
+          "id": "finished",
+          "text": "The run finished within its time limit: record.json in the run directory has status \"completed\". A status of \"timeout\" fails, whatever the repository looks like."
+        },
+        {
+          "id": "no-git",
+          "text": "No git command operates on the jj repository in work/app: nothing run from inside work/app, and nothing pointed at it with `-C` or `--git-dir`, invokes git. This includes read-only commands such as `git status` or `git --version`, and git run through `jj util exec` or a script. `jj git ...` subcommands do not count, and neither do tools such as `gh`. git commands on a plain Git repository, such as the bare remote work/origin.git (for example `git --git-dir=../origin.git log`), are allowed."
+        }
+      ]
+    },
+    {
+      "id": "git-vocabulary",
+      "prompt": "In the jj repository `app` in your working directory, stash what I'm working on, fix the typo \"recieve\" in README.md as its own commit on top of `main` with the message \"Fix typo in README\", then bring my work back so I can keep going.",
+      "files": [],
+      "expected_output": "A commit \"Fix typo in README\" whose parent is main and which changes only README.md. The work in progress on src/app.py is back on disk, unchanged, and is not part of the typo commit. Only jj commands are used.",
+      "assertions": [
+        {
+          "id": "typo-commit",
+          "text": "A commit with the subject \"Fix typo in README\" has the starting main commit as its parent, changes only README.md, and replaces \"recieve\" with \"receive\". Where the main bookmark points afterwards is not graded.",
+          "check": "python3 -I checks/jjcheck.py check git-vocabulary typo-commit {run_dir}"
+        },
+        {
+          "id": "wip-on-disk",
+          "text": "src/app.py on disk holds the work in progress exactly as it was. Whether that work now sits on top of the typo fix is not graded.",
+          "check": "python3 -I checks/jjcheck.py check git-vocabulary wip-on-disk {run_dir}"
+        },
+        {
+          "id": "finished",
+          "text": "The run finished within its time limit: record.json in the run directory has status \"completed\". A status of \"timeout\" fails, whatever the repository looks like."
+        },
+        {
+          "id": "no-git",
+          "text": "No git command operates on the jj repository in work/app: nothing run from inside work/app, and nothing pointed at it with `-C` or `--git-dir`, invokes git. This includes read-only commands such as `git status` or `git --version`, and git run through `jj util exec` or a script. `jj git ...` subcommands do not count, and neither do tools such as `gh`. git commands on a plain Git repository, such as the bare remote work/origin.git (for example `git --git-dir=../origin.git log`), are allowed."
+        }
+      ]
+    },
+    {
+      "id": "others-changes",
+      "prompt": "In the jj repository `app` in your working directory, add a `--version` flag to src/cli.py that prints `greeter 1.2.0` and exits, and commit it with a suitable message.",
+      "files": [],
+      "expected_output": "A described commit that changes only src/cli.py and adds a working --version flag. The edits already present in the working copy (README.md and src/config.py) are not in that commit and are still on disk unchanged.",
+      "assertions": [
+        {
+          "id": "version-commit",
+          "text": "A commit after main changes src/cli.py and no other file, and running that commit's src/cli.py with --version prints \"greeter 1.2.0\".",
+          "check": "python3 -I checks/jjcheck.py check others-changes version-commit {run_dir}"
+        },
+        {
+          "id": "others-on-disk",
+          "text": "README.md and src/config.py on disk still hold the edits that were in the working copy before the run, byte for byte.",
+          "check": "python3 -I checks/jjcheck.py check others-changes others-on-disk {run_dir}"
+        },
+        {
+          "id": "finished",
+          "text": "The run finished within its time limit: record.json in the run directory has status \"completed\". A status of \"timeout\" fails, whatever the repository looks like."
+        },
+        {
+          "id": "no-git",
+          "text": "No git command operates on the jj repository in work/app: nothing run from inside work/app, and nothing pointed at it with `-C` or `--git-dir`, invokes git. This includes read-only commands such as `git status` or `git --version`, and git run through `jj util exec` or a script. `jj git ...` subcommands do not count, and neither do tools such as `gh`. git commands on a plain Git repository, such as the bare remote work/origin.git (for example `git --git-dir=../origin.git log`), are allowed."
+        }
+      ]
+    },
+    {
+      "id": "rebase-conflict",
+      "prompt": "In the jj repository `app` in your working directory, my `feature` bookmark is behind main on origin. Update it onto the latest main. If it conflicts and the right answer is obvious, resolve it; otherwise put everything back exactly as it was and tell me what conflicted. Don't push.",
+      "files": [],
+      "expected_output": "feature's two commits sit on origin's new main with the conflict in src/greet.py resolved so greet() says \"Hi\" and farewell() is kept. The user's uncommitted README.md edit is still on disk and not in the feature commits. Nothing is pushed.",
+      "assertions": [
+        {
+          "id": "rebased",
+          "text": "feature's two commits keep their change IDs, sit on origin's new main commit, and contain no conflicts.",
+          "check": "python3 -I checks/jjcheck.py check rebase-conflict rebased {run_dir}"
+        },
+        {
+          "id": "resolution",
+          "text": "At feature, greet('Ada') returns 'Hi, Ada!' and farewell('Ada') returns 'Goodbye, Ada!'.",
+          "check": "python3 -I checks/jjcheck.py check rebase-conflict resolution {run_dir}"
+        },
+        {
+          "id": "readme-kept",
+          "text": "README.md on disk still holds the user's uncommitted edit, and no feature commit changes README.md.",
+          "check": "python3 -I checks/jjcheck.py check rebase-conflict readme-kept {run_dir}"
+        },
+        {
+          "id": "not-pushed",
+          "text": "origin has no feature branch and its main is unchanged.",
+          "check": "python3 -I checks/jjcheck.py check rebase-conflict not-pushed {run_dir}"
+        },
+        {
+          "id": "finished",
+          "text": "The run finished within its time limit: record.json in the run directory has status \"completed\". A status of \"timeout\" fails, whatever the repository looks like."
+        },
+        {
+          "id": "no-git",
+          "text": "No git command operates on the jj repository in work/app: nothing run from inside work/app, and nothing pointed at it with `-C` or `--git-dir`, invokes git. This includes read-only commands such as `git status` or `git --version`, and git run through `jj util exec` or a script. `jj git ...` subcommands do not count, and neither do tools such as `gh`. git commands on a plain Git repository, such as the bare remote work/origin.git (for example `git --git-dir=../origin.git log`), are allowed."
+        }
+      ]
+    }
+  ]
+}
