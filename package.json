@@ -1,0 +1,9 @@
+{
+  "name": "jujutsu-vcs-skill",
+  "version": "0.1.0",
+  "license": "MIT",
+  "keywords": ["pi-package"],
+  "pi": {
+    "skills": ["./skills/jujutsu-vcs"]
+  }
+}

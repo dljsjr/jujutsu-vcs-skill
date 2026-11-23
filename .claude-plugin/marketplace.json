@@ -1,0 +1,13 @@
+{
+  "name": "jujutsu-vcs-skill",
+  "description": "An agent skill for Jujutsu version control.",
+  "owner": {
+    "name": "dljsjr"
+  },
+  "plugins": [
+    {
+      "name": "jujutsu-vcs",
+      "source": "./"
+    }
+  ]
+}

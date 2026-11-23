@@ -1,0 +1,9 @@
+{
+  "name": "jujutsu-vcs",
+  "version": "0.1.0",
+  "description": "Use Jujutsu (jj) instead of Git in Jujutsu repositories.",
+  "author": {
+    "name": "Doug Stephen"
+  },
+  "license": "MIT"
+}
